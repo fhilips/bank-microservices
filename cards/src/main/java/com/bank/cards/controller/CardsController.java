@@ -1,5 +1,5 @@
 
-package com.bank.loan.controller;
+package com.bank.cards.controller;
 
 import java.util.List;
 
@@ -9,41 +9,43 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.bank.loan.config.LoansServiceConfig;
-import com.bank.loan.model.Customer;
-import com.bank.loan.model.Loans;
-import com.bank.loan.model.Properties;
-import com.bank.loan.repository.LoansRepository;
+import com.bank.cards.config.CardsServiceConfig;
+import com.bank.cards.model.Cards;
+import com.bank.cards.model.Customer;
+import com.bank.cards.model.Properties;
+import com.bank.cards.repository.CardsRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
 
+
 @RestController
-public class LoansController {
+public class CardsController {
 
 	@Autowired
-	private LoansRepository loansRepository;
+	private CardsRepository cardsRepository;
 	
 	@Autowired
-	LoansServiceConfig loansConfig;
+	CardsServiceConfig cardsConfig;	
 
-	@PostMapping("/myLoans")
-	public List<Loans> getLoansDetails(@RequestBody Customer customer) {
-		List<Loans> loans = loansRepository.findByCustomerIdOrderByStartDtDesc(customer.getCustomerId());
-		if (loans != null) {
-			return loans;
+	@PostMapping("/myCards")
+	public List<Cards> getCardDetails(@RequestBody Customer customer) {
+		List<Cards> cards = cardsRepository.findByCustomerId(customer.getCustomerId());
+		if (cards != null) {
+			return cards;
 		} else {
 			return null;
 		}
 
 	}
-		
-	@GetMapping("/loans/properties")
+	
+	@GetMapping("/cards/properties")
 	public String getPropertyDetails() throws JsonProcessingException {
 		ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
-		Properties properties = new Properties(loansConfig.getMsg(), loansConfig.getBuildVersion(),
-				loansConfig.getMailDetails(), loansConfig.getActiveBranches());
+		Properties properties = 
+				new Properties(cardsConfig.getMsg(), cardsConfig.getBuildVersion(),
+				cardsConfig.getMailDetails(), cardsConfig.getActiveBranches());
 		String jsonStr = ow.writeValueAsString(properties);
 		return jsonStr;
 	}
