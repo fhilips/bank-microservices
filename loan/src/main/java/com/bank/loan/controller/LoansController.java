@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.bank.loan.config.LoansServiceConfig;
@@ -29,8 +30,8 @@ public class LoansController {
 	LoansServiceConfig loansConfig;
 
 	@PostMapping("/myLoans")
-	public List<Loans> getLoansDetails(@RequestBody Customer customer) {
-		System.out.println("invokinj");
+	public List<Loans> getLoansDetails(@RequestHeader("eazybank-correlation-id") String correlationid,@RequestBody Customer customer) {
+		System.out.println("Invoking Loans Microservice");
 		List<Loans> loans = loansRepository.findByCustomerIdOrderByStartDtDesc(customer.getCustomerId());
 		if (loans != null) {
 			return loans;
