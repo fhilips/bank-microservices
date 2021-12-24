@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.retry.annotation.Retry;
+import io.micrometer.core.annotation.Timed;
 
 
 @RestController
@@ -51,6 +52,7 @@ public class AccountsController {
 	CardsFeignClient cardsFeignClient;
 
 	@PostMapping("/myAccount")
+	@Timed(value = "getAccountDetails.time", description = "Time taken to return Account Details")
 	public Accounts getAccountDetails(@RequestBody Customer customer) {
 
 		Accounts accounts = accountsRepository.findByCustomerId(customer.getCustomerId());
@@ -101,7 +103,7 @@ public class AccountsController {
 	@GetMapping("/sayHello")
 	@RateLimiter(name = "sayHello", fallbackMethod = "sayHelloFallback")
 	public String sayHello() {
-		return "Hello, Welcome to Banck";
+		return "Hello, Kubbeis!";
 	}
 
 	private String sayHelloFallback(Throwable t) {

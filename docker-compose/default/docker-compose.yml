@@ -2,6 +2,14 @@ version: "3.8"
 
 services:
 
+  zipkin:
+    image: openzipkin/zipkin
+    mem_limit: 700m
+    ports:
+      - "9411:9411"
+    networks:
+      - fhilipsbank
+
   configserver:
     image: fhilips/configserver:latest
     mem_limit: 700m
@@ -9,6 +17,11 @@ services:
       - "8071:8071"
     networks:
       - fhilipsbank
+    depends_on:
+      - zipkin
+    environment:
+      SPRING_PROFILES_ACTIVE: default
+      SPRING_ZIPKIN_BASEURL: http://zipkin:9411/
 
   eurekaserver:
     image: fhilips/eurekaserver:latest
@@ -28,6 +41,7 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: default
       SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
+      SPRING_ZIPKIN_BASEURL: http://zipkin:9411/
 
   accounts:
     image: fhilips/accounts:latest
@@ -38,17 +52,17 @@ services:
       - fhilipsbank
     depends_on:
       - configserver
-      - eurekaserver
     deploy:
       restart_policy:
         condition: on-failure
-        delay: 5s
+        delay: 15s
         max_attempts: 3
         window: 120s
     environment:
       SPRING_PROFILES_ACTIVE: default
       SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/
+      SPRING_ZIPKIN_BASEURL: http://zipkin:9411/
 
   loan:
     image: fhilips/loan:latest
@@ -63,13 +77,14 @@ services:
     deploy:
       restart_policy:
         condition: on-failure
-        delay: 5s
+        delay: 15s
         max_attempts: 3
         window: 120s
     environment:
       SPRING_PROFILES_ACTIVE: default
       SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/
+      SPRING_ZIPKIN_BASEURL: http://zipkin:9411/
 
   cards:
     image: fhilips/cards:latest
@@ -84,13 +99,14 @@ services:
     deploy:
       restart_policy:
         condition: on-failure
-        delay: 5s
+        delay: 15s
         max_attempts: 3
         window: 120s
     environment:
       SPRING_PROFILES_ACTIVE: default
       SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/
+      SPRING_ZIPKIN_BASEURL: http://zipkin:9411/
 
   gatewayserver:
     image: fhilips/gatewayserver:latest
@@ -115,6 +131,7 @@ services:
       SPRING_PROFILES_ACTIVE: default
       SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/
+      SPRING_ZIPKIN_BASEURL: http://zipkin:9411/
 
 networks:
   fhilipsbank: null

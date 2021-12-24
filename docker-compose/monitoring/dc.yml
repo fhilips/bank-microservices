@@ -2,34 +2,55 @@ version: "3.8"
 
 services:
 
+  grafana:
+    image: "grafana/grafana:latest"
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=password
+    networks:
+     - eazybank
+    depends_on:
+      - prometheus  
+
+  prometheus:
+   image: prom/prometheus:latest
+   ports:
+      - "9090:9090"
+   volumes:
+    - ./prometheus.yml:/etc/prometheus/prometheus.yml
+   networks:
+    - eazybank
+   
   zipkin:
-    image: fhilips/zipkin
+    image: openzipkin/zipkin
     mem_limit: 700m
     ports:
       - "9411:9411"
     networks:
-      - fhilipsbank
+     - eazybank
 
   configserver:
-    image: fhilips/configserver:latest
+    image: eazybytes/configserver:latest
     mem_limit: 700m
     ports:
       - "8071:8071"
     networks:
-      - fhilipsbank
+     - eazybank
     depends_on:
       - zipkin
     environment:
-      SPRING_PROFILES_ACTIVE: dev
+      SPRING_PROFILES_ACTIVE: default
       SPRING_ZIPKIN_BASEURL: http://zipkin:9411/
-
+      
   eurekaserver:
-    image: fhilips/eurekaserver:latest
+    image: eazybytes/eurekaserver:latest
     mem_limit: 700m
     ports:
       - "8070:8070"
     networks:
-      - fhilipsbank
+     - eazybank
     depends_on:
       - configserver
     deploy:
@@ -39,82 +60,83 @@ services:
         max_attempts: 3
         window: 120s
     environment:
-      SPRING_PROFILES_ACTIVE: dev
+      SPRING_PROFILES_ACTIVE: default
       SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
       SPRING_ZIPKIN_BASEURL: http://zipkin:9411/
 
   accounts:
-    image: fhilips/accounts:latest
+    image: eazybytes/accounts:latest
     mem_limit: 700m
     ports:
       - "8080:8080"
     networks:
-      - fhilipsbank
+      - eazybank
     depends_on:
       - configserver
+      - eurekaserver
     deploy:
       restart_policy:
         condition: on-failure
-        delay: 15s
+        delay: 30s
         max_attempts: 3
         window: 120s
     environment:
-      SPRING_PROFILES_ACTIVE: dev
+      SPRING_PROFILES_ACTIVE: default
       SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/
       SPRING_ZIPKIN_BASEURL: http://zipkin:9411/
-
-  loan:
-    image: fhilips/loan:latest
+  
+  loans:
+    image: eazybytes/loans:latest
     mem_limit: 700m
     ports:
       - "8090:8090"
     networks:
-      - fhilipsbank
+      - eazybank
     depends_on:
       - configserver
       - eurekaserver
     deploy:
       restart_policy:
         condition: on-failure
-        delay: 15s
+        delay: 30s
         max_attempts: 3
         window: 120s
     environment:
-      SPRING_PROFILES_ACTIVE: dev
+      SPRING_PROFILES_ACTIVE: default
       SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/
       SPRING_ZIPKIN_BASEURL: http://zipkin:9411/
-
+    
   cards:
-    image: fhilips/cards:latest
+    image: eazybytes/cards:latest
     mem_limit: 700m
     ports:
       - "9000:9000"
     networks:
-      - fhilipsbank
+      - eazybank
     depends_on:
       - configserver
       - eurekaserver
     deploy:
       restart_policy:
         condition: on-failure
-        delay: 15s
+        delay: 30s
         max_attempts: 3
         window: 120s
     environment:
-      SPRING_PROFILES_ACTIVE: dev
+      SPRING_PROFILES_ACTIVE: default
       SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/
       SPRING_ZIPKIN_BASEURL: http://zipkin:9411/
-
+      
   gatewayserver:
-    image: fhilips/gatewayserver:latest
+    image: eazybytes/gatewayserver:latest
     mem_limit: 700m
     ports:
       - "8072:8072"
     networks:
-      - fhilipsbank
+      - eazybank
     depends_on:
       - configserver
       - eurekaserver
@@ -128,10 +150,10 @@ services:
         max_attempts: 3
         window: 180s
     environment:
-      SPRING_PROFILES_ACTIVE: dev
+      SPRING_PROFILES_ACTIVE: default
       SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/
       SPRING_ZIPKIN_BASEURL: http://zipkin:9411/
 
 networks:
-  fhilipsbank: null
+  eazybank:
